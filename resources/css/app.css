@@ -1,0 +1,50 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+@import "tailwindcss";
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* A4 Print Layout */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .page-break {
+        page-break-after: always;
+    }
+    .a4-page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 12mm 14mm;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+    /* Thermal receipt: 80mm width, two per A4 page */
+    .receipt-80mm {
+        width: 80mm;
+        padding: 3mm;
+        box-sizing: border-box;
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        line-height: 1.3;
+    }
+    .receipt-page {
+        width: 80mm;
+        min-height: 120mm;
+        padding: 3mm;
+        box-sizing: border-box;
+        border-bottom: 1px dashed #000;
+        margin-bottom: 6mm;
+    }
+    .receipt-page:last-child {
+        border-bottom: none;
+    }
+}
