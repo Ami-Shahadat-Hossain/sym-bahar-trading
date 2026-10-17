@@ -2,4 +2,8 @@ kind: wasmer.io/App.v0
 name: sym-bahar-trading
 owner: ami-shahadat
 package: .
-app_id: da_RrWI0t5UjzmP
+app_id: da_RvJI4t0UAezk
+enableDatabase: true
+enable_email: true
+env:
+  PHPIX_PHP_THREADS: "4"
