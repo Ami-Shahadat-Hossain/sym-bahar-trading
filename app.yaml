@@ -1,0 +1,5 @@
+kind: wasmer.io/App.v0
+name: sym-bahar-trading
+owner: ami-shahadat
+package: .
+app_id: da_RrWI0t5UjzmP
