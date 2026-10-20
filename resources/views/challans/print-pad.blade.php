@@ -5,11 +5,30 @@
     <meta charset="UTF-8">
     <title>Delivery Challan (Pad) {{ $challan->challan_no }}</title>
     @include('partials.print-styles')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @media print {
             @page {
                 size: 148mm 210mm;
                 margin: 0;
+            }
+        }
+
+        /* Screen-only A5 box so html2canvas captures each .page at exactly
+           A5 proportions. Doesn't affect print output. */
+        @media screen {
+            .page {
+                width: 148mm;
+                height: 210mm;
+                overflow: hidden;
+                box-sizing: border-box;
+                margin: 0 auto 20px auto;
+                background: #ffffff;
+            }
+
+            .page-break {
+                display: none;
             }
         }
     </style>
@@ -25,6 +44,16 @@
         $totalPages = count($pages);
         $serialStart = 0;
         $grandQty = $items->sum('qty');
+
+        // Distinct units across all items (case-insensitive), joined with " / "
+        $uniqueUnits = $items
+            ->pluck('unit')
+            ->filter(fn($u) => $u !== null && $u !== '')
+            ->map(fn($u) => trim((string) $u))
+            ->filter()
+            ->unique(fn($u) => strtoupper($u))
+            ->values();
+        $unitLabel = $uniqueUnits->isEmpty() ? '' : $uniqueUnits->implode(' / ');
     @endphp
 
     @foreach ($pages as $pageIdx => $pageItems)
@@ -97,14 +126,17 @@
                         <tr>
                             <td colspan="3" class="center" style="font-weight:700;">Grand Total</td>
                             <td class="center" style="font-weight: 700;">{{ $grandQty }}</td>
-                            <td></td>
+                            <td class="center" style="font-weight: 700;" title="{{ $uniqueUnits->implode(', ') }}">
+                                {{ $unitLabel }}</td>
                         </tr>
                     @endif
                 </tbody>
             </table>
 
             @if ($isLastPage)
-                <div class="signature">
+                <div class="signature"
+                    style="display:flex; justify-content:space-between; align-items:flex-end; gap:40px;">
+                    <div class="line">Receiver Signature</div>
                     <div class="line">Authorise Signature</div>
                 </div>
             @endif
@@ -126,6 +158,10 @@
             style="background:#C8102E; color:#fff; padding:10px 28px; border:none; border-radius:6px; font-size:14px; cursor:pointer;">
             Print (Pad A5)
         </button>
+        <button onclick="downloadPadPdf()"
+            style="margin-left:10px; background:#059669; color:#fff; padding:10px 28px; border:none; border-radius:6px; font-size:14px; cursor:pointer;">
+            Download PDF
+        </button>
         <a href="{{ route('challans.print-a4', $challan) }}"
             style="margin-left:10px; background:#1e293b; color:#fff; padding:10px 28px; border-radius:6px; font-size:14px; text-decoration:none;">
             Print (A4)
@@ -135,6 +171,47 @@
             ← Back to Challan List
         </a>
     </div>
+
+    <script>
+        async function downloadPadPdf() {
+            const noPrintEls = document.querySelectorAll('.no-print');
+            noPrintEls.forEach(el => el.style.display = 'none');
+
+            try {
+                const pages = document.querySelectorAll('.page');
+                const {
+                    jsPDF
+                } = window.jspdf;
+
+                // A5 portrait: 148mm x 210mm
+                const pdf = new jsPDF({
+                    unit: 'mm',
+                    format: [148, 210],
+                    orientation: 'portrait'
+                });
+                const pdfW = pdf.internal.pageSize.getWidth(); // 148
+                const pdfH = pdf.internal.pageSize.getHeight(); // 210
+
+                for (let i = 0; i < pages.length; i++) {
+                    const canvas = await html2canvas(pages[i], {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                    if (i > 0) pdf.addPage([148, 210], 'portrait');
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+                }
+
+                pdf.save('{{ $challan->challan_no }}-pad.pdf');
+            } finally {
+                noPrintEls.forEach(el => el.style.display = '');
+            }
+        }
+    </script>
 
 </body>
 

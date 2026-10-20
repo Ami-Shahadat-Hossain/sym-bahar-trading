@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('challan_date');
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->string('buyer_name')->nullable();
+            $table->string('currency', 3)->default('USD');
             $table->decimal('total_amount', 12, 2)->default(0);
             $table->string('amount_in_words')->nullable();
             $table->timestamps();
@@ -29,8 +30,8 @@ return new class extends Migration
             $table->string('style_name')->nullable();
             $table->integer('qty');
             $table->string('unit')->default('PCS');
-            $table->decimal('rate', 10, 2);
-            $table->decimal('amount', 12, 2);
+            $table->decimal('rate', 18, 9);
+            $table->decimal('amount', 15, 2);
             $table->timestamps();
         });
     }

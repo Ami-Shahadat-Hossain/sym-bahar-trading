@@ -44,6 +44,16 @@
         $totalPages = count($pages);
         $serialStart = 0;
         $grandQty = $items->sum('qty');
+
+        // Distinct units across all items (case-insensitive), joined with " / "
+        $uniqueUnits = $items
+            ->pluck('unit')
+            ->filter(fn($u) => $u !== null && $u !== '')
+            ->map(fn($u) => trim((string) $u))
+            ->filter()
+            ->unique(fn($u) => strtoupper($u))
+            ->values();
+        $unitLabel = $uniqueUnits->isEmpty() ? '' : $uniqueUnits->implode(' / ');
     @endphp
 
     @foreach ($pages as $pageIdx => $pageItems)
@@ -116,14 +126,17 @@
                         <tr>
                             <td colspan="3" class="center" style="font-weight:700;">Grand Total</td>
                             <td class="center" style="font-weight: 700;">{{ $grandQty }}</td>
-                            <td></td>
+                            <td class="center" style="font-weight: 700;" title="{{ $uniqueUnits->implode(', ') }}">
+                                {{ $unitLabel }}</td>
                         </tr>
                     @endif
                 </tbody>
             </table>
 
             @if ($isLastPage)
-                <div class="signature">
+                <div class="signature"
+                    style="display:flex; justify-content:space-between; align-items:flex-end; gap:60px;">
+                    <div class="line">Receiver Signature</div>
                     <div class="line">Authorise Signature</div>
                 </div>
             @endif

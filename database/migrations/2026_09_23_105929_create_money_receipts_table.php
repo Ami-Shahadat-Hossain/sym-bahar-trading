@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
             $table->string('received_from');
             $table->decimal('amount', 12, 2);
+            $table->string('currency', 3)->default('USD'); // ← new
             $table->string('amount_in_words');
             $table->string('against_bill_no')->nullable();
             $table->string('mode')->default('Cash'); // Cash, Cheque, Bank Transfer, Bkash, Nagad, Bangla QR

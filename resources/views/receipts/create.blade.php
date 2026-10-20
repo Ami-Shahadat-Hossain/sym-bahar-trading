@@ -50,9 +50,10 @@
                     @foreach ($invoices as $inv)
                         <option value="{{ $inv->id }}" data-customer="{{ $inv->customer->company_name }}"
                             data-customer-name="{{ $inv->customer_name }}" data-amount="{{ $inv->total_amount }}"
-                            data-invoice-no="{{ $inv->invoice_no }}" @selected(old('invoice_id') == $inv->id)>
+                            data-currency="{{ $inv->currency ?? 'USD' }}" data-invoice-no="{{ $inv->invoice_no }}"
+                            @selected(old('invoice_id') == $inv->id)>
                             {{ $inv->invoice_no }} — {{ $inv->customer->company_name }}
-                            ($ {{ number_format($inv->total_amount, 2) }})
+                            ({{ $inv->currency_symbol }} {{ number_format($inv->total_amount, 2) }})
                         </option>
                     @endforeach
                 </select>
@@ -72,7 +73,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">
-                        Amount ($) <span class="text-red-600">*</span>
+                        Amount (<span id="amountCurrencyLabel">$</span>) <span class="text-red-600">*</span>
                     </label>
                     <input type="number" name="amount" id="amountInput" step="0.01" min="0.01" required
                         value="{{ old('amount') }}"
@@ -124,12 +125,28 @@
     </div>
 
     <script>
-        document.getElementById('invoiceSelect').addEventListener('change', function() {
-            const opt = this.options[this.selectedIndex];
+        const invoiceSelect = document.getElementById('invoiceSelect');
+        const amountLabel = document.getElementById('amountCurrencyLabel');
+
+        function syncFromInvoice() {
+            const opt = invoiceSelect.options[invoiceSelect.selectedIndex];
+            if (!opt || !opt.value) {
+                amountLabel.textContent = '$';
+                return;
+            }
+
+            const currency = opt.dataset.currency || 'USD';
+            const symbol = currency === 'BDT' ? '৳' : '$';
 
             document.getElementById('receivedFrom').value = opt.dataset.customer || '';
             document.getElementById('amountInput').value = opt.dataset.amount || '';
             document.getElementById('againstBillInput').value = opt.dataset.invoiceNo || '';
-        });
+            amountLabel.textContent = symbol;
+        }
+
+        invoiceSelect.addEventListener('change', syncFromInvoice);
+
+        // Preselect on validation-error reload (old('invoice_id') was rendered)
+        document.addEventListener('DOMContentLoaded', syncFromInvoice);
     </script>
 @endsection

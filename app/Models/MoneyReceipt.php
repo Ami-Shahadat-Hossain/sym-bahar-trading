@@ -9,7 +9,7 @@ class MoneyReceipt extends Model
 {
     protected $fillable = [
         'receipt_no', 'receipt_date', 'invoice_id', 'received_from',
-        'amount', 'amount_in_words', 'against_bill_no', 'mode',
+        'amount', 'currency', 'amount_in_words', 'against_bill_no', 'mode',
     ];
 
     protected $casts = ['receipt_date' => 'date'];
@@ -20,7 +20,15 @@ class MoneyReceipt extends Model
     }
 
     /**
-     * Auto-generate receipt number: MMMYY + 0001
+     * Convenience symbol: $ for USD, ৳ for BDT.
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return strtoupper($this->currency ?? 'USD') === 'BDT' ? '৳' : '$';
+    }
+
+    /**
+     * Auto-generate receipt number: MMYY + 0001
      * e.g. 09260001
      */
     public static function generateReceiptNo(): string

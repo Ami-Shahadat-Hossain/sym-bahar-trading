@@ -14,17 +14,30 @@ class MoneyReceiptController extends Controller
         return view('receipts.index', compact('receipts'));
     }
 
+    /**
+     * Only invoices that don't have any receipt yet are selectable.
+     */
     public function create()
     {
-        $invoices = Invoice::with('customer')->latest()->get();
+        $invoices = Invoice::with('customer')
+            ->whereDoesntHave('moneyReceipts') // ← filter added
+            ->latest()
+            ->get();
+
         return view('receipts.create', compact('invoices'));
     }
 
     public function store(StoreMoneyReceiptRequest $request)
     {
-        $data                    = $request->validated();
+        $data    = $request->validated();
+        $invoice = Invoice::findOrFail($data['invoice_id']);
+
         $data['receipt_no']      = MoneyReceipt::generateReceiptNo();
-        $data['amount_in_words'] = NumberToWords::convert($data['amount']);
+        $data['currency']        = $invoice->currency ?? 'USD';
+        $data['amount_in_words'] = NumberToWords::convert(
+            (float) $data['amount'],
+            $data['currency']
+        );
 
         $receipt = MoneyReceipt::create($data);
 
@@ -37,6 +50,43 @@ class MoneyReceiptController extends Controller
     {
         $receipt->load('invoice.customer');
         return view('receipts.show', compact('receipt'));
+    }
+
+    /**
+     * Edit form. Invoices shown = those without receipts + the receipt's
+     * current invoice (so it stays selectable even though it now has one).
+     */
+    public function edit(MoneyReceipt $receipt)
+    {
+        $receipt->load('invoice.customer');
+
+        $invoices = Invoice::with('customer')
+            ->where(function ($q) use ($receipt) {
+                $q->whereDoesntHave('moneyReceipts')
+                    ->orWhere('id', $receipt->invoice_id);
+            })
+            ->latest()
+            ->get();
+
+        return view('receipts.edit', compact('receipt', 'invoices'));
+    }
+
+    public function update(StoreMoneyReceiptRequest $request, MoneyReceipt $receipt)
+    {
+        $data    = $request->validated();
+        $invoice = Invoice::findOrFail($data['invoice_id']);
+
+        $data['currency']        = $invoice->currency ?? 'USD';
+        $data['amount_in_words'] = NumberToWords::convert(
+            (float) $data['amount'],
+            $data['currency']
+        );
+
+        $receipt->update($data);
+
+        return redirect()
+            ->route('receipts.show', $receipt)
+            ->with('success', 'Receipt ' . $receipt->receipt_no . ' updated successfully.');
     }
 
     public function printA4(MoneyReceipt $receipt)

@@ -2,10 +2,33 @@
 @section('title', 'Invoice ' . $invoice->invoice_no)
 
 @section('content')
+    @php
+        // Distinct units across all invoice items (case-insensitive)
+        $uniqueUnits = $invoice->items
+            ->pluck('unit')
+            ->filter(fn($u) => $u !== null && $u !== '')
+            ->map(fn($u) => trim((string) $u))
+            ->filter()
+            ->unique(fn($u) => strtoupper($u))
+            ->values();
+        $unitLabel = $uniqueUnits->isEmpty() ? '' : $uniqueUnits->implode(' / ');
+
+        // Sum of all qty (matches print views)
+        $totalQty = $invoice->items->sum('qty');
+
+        // Per-unit breakdown, used as a tooltip when units are mixed
+        $qtyByUnit = $invoice->items->groupBy('unit')->map(fn($g, $u) => (int) $g->sum('qty') . ' ' . $u);
+    @endphp
+
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-xl font-bold">Invoice {{ $invoice->invoice_no }}</h2>
+                <h2 class="text-xl font-bold">
+                    Invoice {{ $invoice->invoice_no }}
+                    <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {{ $invoice->currency ?? 'USD' }}
+                    </span>
+                </h2>
                 <p class="text-sm text-gray-500">{{ $invoice->invoice_date->format('d-M-Y') }}</p>
             </div>
             <div class="flex gap-2">
@@ -69,16 +92,26 @@
                             </td>
                             <td class="px-2 py-2 border text-center">{{ $item->qty }}</td>
                             <td class="px-2 py-2 border text-center">{{ $item->unit }}</td>
-                            <td class="px-2 py-2 border text-right">{{ number_format($item->rate, 2) }}</td>
+                            <td class="px-2 py-2 border text-right">
+                                {{ rtrim(rtrim(number_format($item->rate, 9, '.', ''), '0'), '.') ?: '0' }}</td>
                             <td class="px-2 py-2 border text-right">{{ number_format($item->amount, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr class="bg-gray-100 font-semibold">
-                        <td colspan="7" class="px-2 py-2 border text-right">Grand Total :</td>
+                        <td colspan="4" class="px-2 py-2 border text-right">Grand Total :</td>
+                        {{-- Total Qty, aligned under the Qty column --}}
+                        <td class="px-2 py-2 border text-center" title="{{ $qtyByUnit->implode(' + ') }}">
+                            {{ $totalQty }}</td>
+                        {{-- Unit label, aligned under the Unit column --}}
+                        <td class="px-2 py-2 border text-center" title="{{ $uniqueUnits->implode(', ') }}">
+                            {{ $unitLabel }}</td>
+                        {{-- Rate cell stays empty --}}
+                        <td class="px-2 py-2 border"></td>
+                        {{-- Grand Total amount --}}
                         <td class="px-2 py-2 border text-right">
-                            $ {{ number_format($invoice->total_amount, 2) }}
+                            {{ $invoice->currency_symbol }} {{ number_format($invoice->total_amount, 2) }}
                         </td>
                     </tr>
                 </tfoot>

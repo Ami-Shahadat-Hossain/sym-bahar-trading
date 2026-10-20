@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Helpers\NumberToWords;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,7 +11,7 @@ class Invoice extends Model
 {
     protected $fillable = [
         'invoice_no', 'invoice_date', 'customer_id', 'customer_name',
-        'total_amount', 'amount_in_words',
+        'currency', 'total_amount', 'amount_in_words',
     ];
 
     protected $casts = ['invoice_date' => 'date'];
@@ -36,8 +37,7 @@ class Invoice extends Model
     }
 
     /**
-     * Auto-generate invoice number: INVO + MMM + YYYY + 0001
-     * e.g. INVO09260001
+     * Auto-generate invoice number: INV + MM + YY + 0001
      */
     public static function generateInvoiceNo(): string
     {
@@ -54,8 +54,22 @@ class Invoice extends Model
 
     public function recalculateTotal(): void
     {
-        $this->total_amount    = $this->items()->sum('amount');
-        $this->amount_in_words = \App\Helpers\NumberToWords::convert($this->total_amount);
+        $this->total_amount = $this->items()->sum('amount');
+
+        // Respect the invoice's own currency (USD default for legacy rows)
+        $this->amount_in_words = NumberToWords::convert(
+            (float) $this->total_amount,
+            $this->currency ?? 'USD'
+        );
+
         $this->save();
+    }
+
+    /**
+     * Convenience symbol: $ for USD, ৳ for BDT.
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return strtoupper($this->currency ?? 'USD') === 'BDT' ? '৳' : '$';
     }
 }

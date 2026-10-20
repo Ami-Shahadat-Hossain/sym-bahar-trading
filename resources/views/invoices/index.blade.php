@@ -34,15 +34,24 @@
                     @forelse($invoices as $i => $inv)
                         <tr class="border-b hover:bg-slate-50">
                             <td class="px-3 py-2">{{ $invoices->firstItem() + $i }}</td>
-                            <td class="px-3 py-2 font-mono">{{ $inv->invoice_no }}</td>
+                            <td class="px-3 py-2 font-mono">
+                                {{ $inv->invoice_no }}
+                                <span class="ml-1 text-[10px] px-1 rounded bg-slate-100 text-slate-700">
+                                    {{ $inv->currency ?? 'USD' }}
+                                </span>
+                            </td>
                             <td class="px-3 py-2">{{ $inv->invoice_date->format('d-M-Y') }}</td>
                             <td class="px-3 py-2">{{ $inv->customer->company_name }}</td>
                             <td class="px-3 py-2 text-xs">{{ $inv->customer_name ?? '—' }}</td>
-                            <td class="px-3 py-2 text-right font-semibold">{{ number_format($inv->total_amount, 2) }}</td>
+                            <td class="px-3 py-2 text-right font-semibold">
+                                {{ $inv->currency_symbol }} {{ number_format($inv->total_amount, 2) }}
+                            </td>
                             <td class="px-3 py-2">
                                 <div class="flex justify-center gap-1.5">
                                     <a href="{{ route('invoices.show', $inv) }}" data-tip="View"
                                         class="w-8 h-8 flex items-center justify-center rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200">👁</a>
+                                    <a href="{{ route('invoices.edit', $inv) }}" data-tip="Edit"
+                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200">✎</a>
                                     <a href="{{ route('receipts.create') }}" data-tip="Create Receipt"
                                         class="w-8 h-8 flex items-center justify-center rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200">＋</a>
                                     <a href="{{ route('invoices.print-a4', $inv) }}" data-tip="Print A4"

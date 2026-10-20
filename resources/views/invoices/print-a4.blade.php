@@ -71,13 +71,26 @@
         $pages = $chunks->isEmpty() ? [collect()] : $chunks->values()->all();
         $totalPages = count($pages);
         $grandQty = $allItems->sum('qty');
+
+        // Distinct units across all items (case-insensitive) for the Grand Total cell
+        $uniqueUnits = $allItems
+            ->pluck('unit')
+            ->filter(fn($u) => $u !== null && $u !== '')
+            ->map(fn($u) => trim((string) $u))
+            ->filter()
+            ->unique(fn($u) => strtoupper($u))
+            ->values();
+        $unitLabel = $uniqueUnits->isEmpty() ? '' : $uniqueUnits->implode(' / ');
+
+        // Per-unit breakdown as a tooltip when units are mixed
+        $qtyByUnit = $allItems->groupBy('unit')->map(fn($g, $u) => (int) $g->sum('qty') . ' ' . $u);
     @endphp
 
     @foreach ($pages as $pageIdx => $pageItems)
         @php $isLastPage = ($pageIdx === $totalPages - 1); @endphp
 
         <div class="page">
-            @include('partials.print-header', ['docTitle' => 'INVOICE'])
+            @include('partials.print-header', ['docTitle' => 'BILL'])
 
             <div class="doc-meta">
                 <div class="meta-item">Invoice No : {{ $invoice->invoice_no }}</div>
@@ -137,7 +150,10 @@
 
                             <td class="center">{{ $row['item']->qty }}</td>
                             <td class="center">{{ $row['item']->unit }}</td>
-                            <td class="center">{{ number_format($row['item']->rate, 2) }}</td>
+                            {{-- Rate: up to 9 decimals, trailing zeros trimmed --}}
+                            <td class="center">
+                                {{ rtrim(rtrim(number_format($row['item']->rate, 9, '.', ''), '0'), '.') ?: '0' }}
+                            </td>
                             <td class="center">{{ number_format($row['item']->amount, 2) }}</td>
                         </tr>
                     @empty
@@ -160,10 +176,17 @@
                     @if ($isLastPage)
                         <tr>
                             <td colspan="4" class="center" style="font-weight:700;">Grand Total</td>
-                            <td class="center" style="font-weight: 700;">{{ $grandQty }}</td>
+                            {{-- Qty --}}
+                            <td class="center" style="font-weight: 700;" title="{{ $qtyByUnit->implode(' + ') }}">
+                                {{ $grandQty }}</td>
+                            {{-- Unit label (deduped, slash-joined if mixed) --}}
+                            <td class="center" style="font-weight: 700;" title="{{ $uniqueUnits->implode(', ') }}">
+                                {{ $unitLabel }}</td>
+                            {{-- Rate cell stays empty --}}
                             <td></td>
-                            <td></td>
-                            <td class="center" style="font-weight: 700;">{{ number_format($invoice->total_amount, 2) }}
+                            {{-- Amount with currency symbol --}}
+                            <td class="center" style="font-weight: 700;">
+                                {{ $invoice->currency_symbol }} {{ number_format($invoice->total_amount, 2) }}
                             </td>
                         </tr>
                     @endif
@@ -173,6 +196,12 @@
             @if ($isLastPage)
                 <div class="amount-words">
                     Amount In Words : {{ $invoice->amount_in_words }}
+                </div>
+
+                {{-- Payment Note --}}
+                <div class="amount-words" style="margin-top:4px; font-style:normal;">
+                    <strong>Payment Note :</strong> Payment of the invoice value must be made in Bangladeshi Taka Cash
+                    or Cheque.
                 </div>
 
                 <div class="signature">

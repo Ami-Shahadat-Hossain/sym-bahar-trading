@@ -5,7 +5,12 @@
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-xl font-bold">Challan {{ $challan->challan_no }}</h2>
+                <h2 class="text-xl font-bold">
+                    Challan {{ $challan->challan_no }}
+                    <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {{ $challan->currency ?? 'USD' }}
+                    </span>
+                </h2>
                 <p class="text-sm text-gray-500">{{ $challan->challan_date->format('d-M-Y') }}</p>
             </div>
             <div class="flex gap-2">
@@ -63,7 +68,10 @@
                             <td class="px-2 py-2 border">{{ $item->style_name ?? '—' }}</td>
                             <td class="px-2 py-2 border text-center">{{ $item->qty }}</td>
                             <td class="px-2 py-2 border text-center">{{ $item->unit }}</td>
-                            <td class="px-2 py-2 border text-right">{{ number_format($item->rate, 2) }}</td>
+                            {{-- Rate: up to 9 decimals, trailing zeros trimmed --}}
+                            <td class="px-2 py-2 border text-right">
+                                {{ rtrim(rtrim(number_format($item->rate, 9, '.', ''), '0'), '.') ?: '0' }}
+                            </td>
                             <td class="px-2 py-2 border text-right">{{ number_format($item->amount, 2) }}</td>
                         </tr>
                     @endforeach
@@ -72,7 +80,8 @@
                     <tr class="bg-gray-100 font-semibold">
                         <td colspan="6" class="px-2 py-2 border text-right">Grand Total :</td>
                         <td class="px-2 py-2 border text-right">
-                            $ {{ number_format($challan->total_amount, 2) }}
+                            {{-- Currency-aware symbol ($ or ৳) --}}
+                            {{ $challan->currency_symbol }} {{ number_format($challan->total_amount, 2) }}
                         </td>
                     </tr>
                 </tfoot>

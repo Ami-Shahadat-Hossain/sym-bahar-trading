@@ -6,10 +6,19 @@
         {{-- Header --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
             <div>
-                <h2 class="text-xl font-bold text-slate-800">Money Receipt</h2>
+                <h2 class="text-xl font-bold text-slate-800">
+                    Money Receipt
+                    <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {{ $receipt->currency ?? 'USD' }}
+                    </span>
+                </h2>
                 <p class="text-sm text-slate-500 font-mono mt-1">{{ $receipt->receipt_no }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="{{ route('receipts.edit', $receipt) }}"
+                    class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center gap-1.5 transition">
+                    ✎ Edit
+                </a>
                 <a href="{{ route('receipts.print-a4', $receipt) }}"
                     class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center gap-1.5 transition"
                     data-tip="Print 2 copies on A4">
@@ -60,7 +69,7 @@
         <div class="text-center border-2 border-slate-200 rounded-xl py-6 mb-5 bg-gradient-to-br from-slate-50 to-white">
             <p class="text-xs text-slate-500 uppercase tracking-widest mb-2">Amount Received</p>
             <p class="text-4xl font-bold text-emerald-700">
-                <span class="text-xl font-medium text-slate-600">$</span>
+                <span class="text-xl font-medium text-slate-600">{{ $receipt->currency_symbol }}</span>
                 {{ number_format($receipt->amount, 2) }}
             </p>
         </div>

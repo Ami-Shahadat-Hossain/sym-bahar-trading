@@ -254,7 +254,7 @@
                     {{-- ===== Amount box in label col, Mode in value col ===== --}}
                     <div class="amount-mode-wrap">
                         <div class="amount-box">
-                            $ {{ number_format($receipt->amount, 2) }}
+                            {{ $receipt->currency_symbol }} {{ number_format($receipt->amount, 2) }}
                         </div>
 
                         <div class="mode-line">

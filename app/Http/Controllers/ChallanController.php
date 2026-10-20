@@ -40,16 +40,25 @@ class ChallanController extends Controller
                 'challan_date' => $request->challan_date,
                 'customer_id'  => $request->customer_id,
                 'buyer_name'   => $request->buyer_name,
+                'currency'     => $request->currency ?? 'USD', // ← added
             ]);
 
             foreach ($request->items as $item) {
+                $qty  = (int) $item['qty'];
+                $rate = (float) $item['rate'];
+
+                // Use the amount typed by the user if present, else compute qty × rate
+                $amount = isset($item['amount']) && $item['amount'] !== ''
+                    ? (float) $item['amount']
+                    : $qty * $rate;
+
                 $challan->items()->create([
                     'item_description' => $item['item_description'],
                     'style_name'       => $item['style_name'] ?? null,
-                    'qty'              => (int) $item['qty'],
+                    'qty'              => $qty,
                     'unit'             => $item['unit'],
-                    'rate'             => (float) $item['rate'],
-                    'amount'           => (float) $item['qty'] * (float) $item['rate'],
+                    'rate'             => $rate,
+                    'amount'           => round($amount, 2),
                 ]);
             }
 
@@ -93,19 +102,28 @@ class ChallanController extends Controller
                 'challan_date' => $request->challan_date,
                 'customer_id'  => $request->customer_id,
                 'buyer_name'   => $request->buyer_name,
+                'currency'     => $request->currency ?? $challan->currency ?? 'USD', // ← added
             ]);
 
             // Delete old items and recreate
             $challan->items()->delete();
 
             foreach ($request->items as $item) {
+                $qty  = (int) $item['qty'];
+                $rate = (float) $item['rate'];
+
+                // Use the amount typed by the user if present, else compute qty × rate
+                $amount = isset($item['amount']) && $item['amount'] !== ''
+                    ? (float) $item['amount']
+                    : $qty * $rate;
+
                 $challan->items()->create([
                     'item_description' => $item['item_description'],
                     'style_name'       => $item['style_name'] ?? null,
-                    'qty'              => (int) $item['qty'],
+                    'qty'              => $qty,
                     'unit'             => $item['unit'],
-                    'rate'             => (float) $item['rate'],
-                    'amount'           => (float) $item['qty'] * (float) $item['rate'],
+                    'rate'             => $rate,
+                    'amount'           => round($amount, 2),
                 ]);
             }
 

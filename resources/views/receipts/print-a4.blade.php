@@ -226,7 +226,7 @@
                     {{-- ===== Amount box in label col, Mode in value col ===== --}}
                     <div class="amount-mode-wrap">
                         <div class="amount-box">
-                            $ {{ number_format($receipt->amount, 2) }}
+                            {{ $receipt->currency_symbol }} {{ number_format($receipt->amount, 2) }}
                         </div>
 
                         <div class="mode-line">
@@ -307,9 +307,7 @@
                     });
                     const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-                    // Aspect-fit: scale the captured canvas into A4 without
-                    // distortion. Prevents extra pages if the receipt block's
-                    // 138mm×2 + margins spills a hair over 297mm.
+                    // Aspect-fit: scale the captured canvas into A4 without distortion.
                     const imgAspect = canvas.width / canvas.height;
                     const pdfAspect = pdfW / pdfH;
                     let drawW = pdfW,

@@ -36,7 +36,7 @@
                         <th class="px-3 py-2.5 text-left">Invoice No</th>
                         <th class="px-3 py-2.5 text-left">Received From</th>
                         <th class="px-3 py-2.5 text-left">Mode</th>
-                        <th class="px-3 py-2.5 text-right">Amount ($)</th>
+                        <th class="px-3 py-2.5 text-right">Amount</th>
                         <th class="px-3 py-2.5 text-center w-60">Actions</th>
                     </tr>
                 </thead>
@@ -54,7 +54,7 @@
                                     class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{{ $r->mode }}</span>
                             </td>
                             <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">
-                                {{ number_format($r->amount, 2) }}
+                                {{ $r->currency_symbol }} {{ number_format($r->amount, 2) }}
                             </td>
                             <td class="px-3 py-2.5">
                                 <div class="flex justify-center gap-1.5">
@@ -66,6 +66,10 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
+                                    </a>
+                                    <a href="{{ route('receipts.edit', $r) }}" data-tip="Edit"
+                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition">
+                                        ✎
                                     </a>
                                     <a href="{{ route('receipts.print-a4', $r) }}" data-tip="Print A4 (2 copies)"
                                         class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-200 text-slate-800 hover:bg-slate-300 text-xs font-bold transition">
