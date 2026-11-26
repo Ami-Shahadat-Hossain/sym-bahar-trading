@@ -95,6 +95,28 @@
         </a>
     </div>
 
+    {{-- Business Pad entry --}}
+    <div class="mb-8">
+        <a href="{{ route('business-pad.index') }}"
+            class="flex items-center justify-between bg-white border border-slate-200 rounded-xl shadow-sm p-5 hover:shadow-md hover:border-slate-300 transition group">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-800">Business Pad</p>
+                    <p class="text-xs text-slate-500">Print or download the blank letterhead pad — with or without content.
+                    </p>
+                </div>
+            </div>
+            <span class="text-sm font-medium text-slate-500 group-hover:text-slate-800 transition">Open →</span>
+        </a>
+    </div>
+
     {{-- Recent activity --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-md p-5">
